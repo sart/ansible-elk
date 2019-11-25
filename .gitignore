@@ -1,0 +1,4 @@
+roles/elasticsearch/files/elasticsearch-7.4.2-linux-x86_64.tgz
+roles/filebeat/files/filebeat-7.4.2-linux-x86_64.tgz
+roles/kibana/files/kibana-7.4.2-linux-x86_64.tgz
+roles/logstash/files/logstash-7.4.2.tgz

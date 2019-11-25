@@ -1,0 +1,84 @@
+- name: create dir distrib
+  file:
+    path: /opt/distrib
+    state: directory
+    mode: '0755'
+    owner: user
+    group: user
+
+- name: create dir lib
+  file:
+    path: /opt/lib
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: create dir log
+  file:
+    path: /opt/log
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: Copy filebeat archive
+  copy:
+    src=filebeat-7.4.2-linux-x86_64.tgz
+    dest=/opt/distrib/filebeat-7.4.2-linux-x86_64.tgz
+    owner=root
+    group=root
+    mode=0644
+  become: true
+
+- name: Extract filebeat bin
+  unarchive:
+    src: /opt/distrib/filebeat-7.4.2-linux-x86_64.tgz
+    dest: /opt/distrib
+    owner: root
+    group: root
+    remote_src: yes
+  become: true
+
+- name: Create link
+  file:
+    src: /opt/distrib/filebeat-7.4.2-linux-x86_64
+    dest: /opt/filebeat
+    owner: root
+    group: root
+    state: link
+  become: true
+
+- name: Install plugin
+  shell: /opt/filebeat/filebeat -c /opt/filebeat/filebeat.yml modules enable elasticsearch
+  become: true
+
+- name: Copy filebeat config
+  copy:
+    src=filebeat.yml
+    dest=/opt/filebeat
+    owner=root
+    group=root
+    mode=0644
+  become: true
+
+- name: Change config - hosts
+  lineinfile:
+    path: "{{ filebeat_yml }}"
+    regexp: ' hosts:'
+    line: '  hosts: ["{{ ansible_host }}:9200"]'
+    state: present
+    backrefs: yes
+
+- name: Copy filebeat run
+  copy:
+    src=filebeat.ini
+    dest=/etc/supervisord.d/filebeat.ini
+    owner=root
+    group=root
+    mode=0644
+  become: true
+
+- name: Run supervisor update
+  shell: supervisorctl update
+  become: true

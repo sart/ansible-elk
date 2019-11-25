@@ -1,0 +1,20 @@
+- name: Make elasticsearch data
+  lineinfile:
+    path: "{{ elastisearch_yml }}"
+    regexp: '^node.data'
+    line: 'node.data: true'
+    state: present
+    backrefs: yes
+
+- name: Disable elasticsearch ingest
+  lineinfile:
+    path: "{{ elastisearch_yml }}"
+    regexp: '^node.ingest'
+    line: 'node.ingest: false'
+    state: present
+    backrefs: yes
+  when: ingest is undefined
+
+- name: Restart elasticsearch
+  shell: supervisorctl restart elasticsearch
+  become: true

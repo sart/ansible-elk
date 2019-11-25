@@ -1,0 +1,76 @@
+- name: create dir distrib
+  file:
+    path: /opt/distrib
+    state: directory
+    mode: '0755'
+    owner: user
+    group: user
+
+- name: create dir lib
+  file:
+    path: /opt/lib
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: create dir log
+  file:
+    path: /opt/log
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: Copy elasticsearch archive
+  copy:
+    src=elasticsearch-7.4.2-linux-x86_64.tgz
+    dest=/opt/distrib/elasticsearch-7.4.2-linux-x86_64.tgz
+    owner=user
+    group=user
+    mode=0644
+  become: true
+
+- name: Extract elasticsearch bin
+  unarchive:
+    src: /opt/distrib/elasticsearch-7.4.2-linux-x86_64.tgz
+    dest: /opt/distrib
+    owner: user
+    group: user
+    remote_src: yes
+  become: true
+
+- name: Chown directory
+  shell: chown -R user:user /opt/distrib/elasticsearch-7.4.2
+  become: true
+
+- name: Create link
+  file:
+    src: /opt/distrib/elasticsearch-7.4.2 
+    dest: /opt/elasticsearch
+    owner: user
+    group: user
+    state: link
+  become: true
+
+- name: Copy elasticsearch config
+  copy:
+    src=elasticsearch.yml
+    dest=/opt/elasticsearch/config
+    owner=user
+    group=user
+    mode=0644
+  become: true
+
+- name: Copy elasticsearch run
+  copy:
+    src=elasticsearch.ini
+    dest=/etc/supervisord.d/elasticsearch.ini
+    owner=root
+    group=root
+    mode=0644
+  become: true
+
+- name: Run supervisor update
+  shell: supervisorctl update
+  become: true

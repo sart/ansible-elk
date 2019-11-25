@@ -1,0 +1,92 @@
+- name: create dir distrib
+  file:
+    path: /opt/distrib
+    state: directory
+    mode: '0755'
+    owner: user
+    group: user
+
+- name: create dir lib
+  file:
+    path: /opt/lib
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: create dir log
+  file:
+    path: /opt/log
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: Copy logstash archive
+  copy:
+    src=logstash-7.4.2.tgz
+    dest=/opt/distrib/logstash-7.4.2.tgz
+    owner=user
+    group=user
+    mode=0644
+  become: true
+
+- name: Extract logstash bin
+  unarchive:
+    src: /opt/distrib/logstash-7.4.2.tgz
+    dest: /opt/distrib
+    owner: user
+    group: user
+    remote_src: yes
+  become: true
+
+- name: Chown directory
+  shell: chown -R user:user /opt/distrib/logstash-7.4.2
+  become: true
+
+- name: Create link
+  file:
+    src: /opt/distrib/logstash-7.4.2
+    dest: /opt/logstash
+    owner: user
+    group: user
+    state: link
+  become: true
+
+- name: Install plugin
+  shell: /opt/logstash/bin/logstash-plugin install logstash-input-http
+  become: true
+
+- name: Copy logstash config
+  copy:
+    src=logstash.conf
+    dest=/opt/logstash/config
+    owner=user
+    group=user
+    mode=0644
+  become: true
+
+- name: Change config - host
+  lineinfile:
+    path: "{{ logstash_conf }}"
+    regexp: 'host\s'
+    line: '    host => "{{ ansible_host }}"'
+
+- name: Change config - hosts
+  lineinfile:
+    path: "{{ logstash_conf }}"
+    regexp: 'hosts'
+    line: '    hosts => ["http://{{ ansible_host }}:9200"]'
+
+- name: Copy logstash run
+  copy:
+    src=logstash.ini
+    dest=/etc/supervisord.d/logstash.ini
+    owner=root
+    group=root
+    mode=0644
+  become: true
+
+- name: Run supervisor update
+  shell: supervisorctl update
+  become: true

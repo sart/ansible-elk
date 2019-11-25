@@ -1,0 +1,92 @@
+- name: create dir distrib
+  file:
+    path: /opt/distrib
+    state: directory
+    mode: '0755'
+    owner: user
+    group: user
+
+- name: create dir lib
+  file:
+    path: /opt/lib
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: create dir log
+  file:
+    path: /opt/log
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: Copy kibana archive
+  copy:
+    src=kibana-7.4.2-linux-x86_64.tgz
+    dest=/opt/distrib/kibana-7.4.2-linux-x86_64.tgz
+    owner=user
+    group=user
+    mode=0644
+  become: true
+
+- name: Extract kibana bin
+  unarchive:
+    src: /opt/distrib/kibana-7.4.2-linux-x86_64.tgz
+    dest: /opt/distrib
+    owner: user
+    group: user
+    remote_src: yes
+  become: true
+
+- name: Chown directory
+  shell: chown -R user:user /opt/distrib/kibana-7.4.2-linux-x86_64
+  become: true
+
+- name: Create link
+  file:
+    src: /opt/distrib/kibana-7.4.2-linux-x86_64
+    dest: /opt/kibana
+    owner: user
+    group: user
+    state: link
+  become: true
+
+- name: Copy kibana config
+  copy:
+    src=kibana.yml
+    dest=/opt/kibana/config
+    owner=user
+    group=user
+    mode=0644
+  become: true
+
+- name: Change config - server.host
+  lineinfile:
+    path: "{{ kibana_yml }}"
+    regexp: '^server.host'
+    line: 'server.host: "{{ ansible_host }}"'
+    state: present
+    backrefs: yes
+
+- name: Change config - elasticsearch.hosts
+  lineinfile:
+    path: "{{ kibana_yml }}"
+    regexp: '^elasticsearch.hosts'
+    line: 'elasticsearch.hosts: ["http://{{ ansible_host }}:9200"]'
+    state: present
+    backrefs: yes
+
+- name: Copy kibana run
+  copy:
+    src=kibana.ini
+    dest=/etc/supervisord.d/kibana.ini
+    owner=root
+    group=root
+    mode=0644
+  become: true
+
+- name: Run supervisor update
+  shell: supervisorctl update
+  become: true

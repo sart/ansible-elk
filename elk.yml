@@ -1,0 +1,23 @@
+- hosts: install
+  remote_user: "{{ ansible_system_user }}"
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - { role: elasticsearch }
+    - { role: kibana }
+    - { role: logstash }
+    - { role: filebeat }
+
+- hosts: elasticsearch_data
+  remote_user: "{{ ansible_system_user }}"
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - { role: elasticsearch_data }
+
+- hosts: elasticsearch_ingest
+  remote_user: "{{ ansible_system_user }}"
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - { role: elasticsearch_ingest }
