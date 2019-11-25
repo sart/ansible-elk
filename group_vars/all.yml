@@ -1,0 +1,6 @@
+---
+ansible_system_user: root
+elastisearch_yml: /opt/elasticsearch/config/elasticsearch.yml
+kibana_yml: /opt/kibana/config/kibana.yml
+logstash_conf: /opt/logstash/config/logstash.conf
+filebeat_yml: /opt/filebeat/filebeat.yml
